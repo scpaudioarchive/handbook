@@ -68,4 +68,4 @@ jobs:
             -m "B $GITHUB_ACTOR" \
             -m "scpfoundationaudioarchive" \
             || true
-          git push --force-with-lease origin main
+          git push --force-with-lease origin pages
