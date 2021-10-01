@@ -57,7 +57,7 @@ jobs:
           git config user.name "SCP Foundation Audio Archive"
           git config user.email scpfoundationaudioarchive@gmail.com
           git remote set-url origin \
-            https://scpfoundationaudioarchive:$GHPG_DEPLOY_KEY@github.com/scpaudioarchive/scpaudioarchive.github.io.git
+            https://scpfoundationaudioarchive:$GHPG_DEPLOY_KEY@github.com/scpaudioarchive/handbook.git
           git add -A
           datev="$(date +'%Y-%m-%d %H:%M:%S %:::z')"
           git commit --amend \
