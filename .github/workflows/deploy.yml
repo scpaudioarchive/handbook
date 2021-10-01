@@ -1,0 +1,71 @@
+name: Deploy
+defaults:
+  run:
+    shell: bash
+
+on:
+  push:
+  pull_request:
+  #  For automated publishing ("future/ scheduled posts" using cron):
+  #  schedule:
+  #- cron: '  '
+
+env:
+  HUGO_ENV: production
+  GHPG_DEPLOY_KEY: ${{ secrets.GHPAGESDEPLOYKEY }} # Set from org
+
+jobs:
+  builds:
+    runs-on: ubuntu-latest
+    if: |
+      !contains(github.event.head_commit.message,'[skip ci]') &&
+      (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'scpaudioarchive/handbook')
+  # Skip internal pull requests, use from push event.
+  # Skip messages with [skip ci] in title of head commit message
+    steps:
+    - name: Clone
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Build site
+      uses: cachix/install-nix-action@v13
+    - run: nix-shell --run "hugo --minify --destination="build""
+    - name: Possibly Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        path: build
+        retention-days: 2
+
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to GitHub Pages
+    needs: [builds]
+    if: "contains('
+          refs/heads/main
+          ', github.ref)"
+    steps:
+      - name: Get artifact
+        uses: actions/download-artifact@v2
+        with:
+         path: build
+
+      - name: Setup + Deploy to GitHub Pages
+        run: |
+          git clone -b pages --depth 1 https://github.com/scpaudioarchive/handbook ghp
+          rsync -av --delete --exclude ".git" build/artifact/ ghp
+          cd ghp
+          git config user.name "SCP Foundation Audio Archive"
+          git config user.email scpfoundationaudioarchive@gmail.com
+          git remote set-url origin \
+            https://scpfoundationaudioarchive:$GHPG_DEPLOY_KEY@github.com/scpaudioarchive/scpaudioarchive.github.io.git
+          git add -A
+          datev="$(date +'%Y-%m-%d %H:%M:%S %:::z')"
+          git commit --amend \
+            -m "$datev deploy latest" \
+            -m "" \
+            -m "ID: $GITHUB_RUN_NUMBER using $GITHUB_WORKFLOW" \
+            -m "From commit: $GITHUB_SHA w $GITHUB_REF" \
+            -m "B $GITHUB_ACTOR" \
+            -m "scpfoundationaudioarchive" \
+            || true
+          git push --force-with-lease origin main
