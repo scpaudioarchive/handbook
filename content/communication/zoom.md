@@ -22,6 +22,8 @@ We currently have one free account set up (free due to financial constraints). M
   - Save Captions
   - Focus Mode
 
+https://blog.zoom.us/keep-uninvited-guests-out-of-your-zoom-meeting/
+
 ## Recording/ Livestreaming Meetings
 
 The current process is recording, to:
